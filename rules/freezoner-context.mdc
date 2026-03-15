@@ -1,0 +1,165 @@
+---
+description: Automatically provides Freezoner Odoo 18 project context when editing custom module files. Enforces team conventions, API standards, and highlights known error patterns.
+alwaysApply: false
+globs:
+  - "**/custom_addons_odoo18_freezoner/**/*.py"
+  - "**/custom_addons_odoo18_freezoner/**/*.xml"
+  - "**/custom_addons_odoo18_freezoner/**/*.csv"
+---
+
+# Freezoner Odoo 18 — Project Context
+
+You are working inside the **Freezoner custom Odoo 18** codebase.
+
+## Project Structure
+
+```
+/opt/odoo/custom_addons_odoo18_freezoner/odoo-sh/
+├── _beshoy/
+│   ├── level_0_independent/   # 17 standalone modules
+│   ├── level_1_base_custom/   # partner_custom, client_documents
+│   ├── level_2_simple_deps/   # cabinet_directory, crm_report, partner_custom_fields
+│   ├── level_3_complex_deps/  # freezoner_custom, crm_log
+│   ├── level_4_high_level/    # compliance_cycle, freezoner_sale_approval, sales_commission
+│   └── level_5_top_level/     # project_custom
+├── _free_installed_modules/
+├── _paid_modules/
+├── _fix_modules/
+├── _sabry_youssef/
+├── _youssef/
+├── _ziad/
+├── _quarantine/               # broken/disabled modules — do not activate
+├── error_fixes/               # ERROR_XXX_* documented bug tickets
+└── odoo18_fixes/              # Odoo 18 compatibility patches
+```
+
+**Config:** `/opt/odoo/conf/odoo18.conf` | **Log:** `/opt/odoo/logs/odoo18.log` | **Port:** 8018 | **DB:** `odoo18`
+
+## Dependency Level Rule
+
+A module's level = the deepest level of any of its custom dependencies.
+- Never add a higher-level module as a dependency of a lower-level one.
+- The chain: L0 → L1 → L2 → L3 (freezoner_custom) → L4 → L5 (project_custom)
+
+## Odoo 18 API — Mandatory Conventions
+
+### Python Models
+
+```python
+# CORRECT — Odoo 18
+from odoo import models, fields, api
+
+class MyModel(models.Model):
+    _name = 'my.model'
+    _description = 'My Model'
+    _inherit = ['mail.thread', 'mail.activity.mixin']
+
+    name = fields.Char(required=True, tracking=True)
+
+    def action_do_something(self):
+        self.ensure_one()  # use this, NOT @api.one
+        # ...
+
+    @api.model
+    def create(self, vals):
+        return super().create(vals)
+```
+
+**Never use:**
+- `@api.multi` — removed in Odoo 13+, raises `AttributeError`
+- `@api.one` — removed in Odoo 13+
+- `openerp` import paths — use `odoo`
+- Old 4-positional-arg `Many2many`: `fields.Many2many('model', 'table', 'col1', 'col2')` → use keyword args
+
+**Be careful with:**
+- `self.env['model'].search([])` without a limit in scheduled actions — always add `limit=` or use domains
+- `sudo()` — use sparingly, document why it's needed
+
+### XML Views — Odoo 18
+
+```xml
+<!-- CORRECT — Odoo 18 form view -->
+<record id="view_mymodule_form" model="ir.ui.view">
+    <field name="name">my.module.form</field>
+    <field name="model">my.model</field>
+    <field name="arch" type="xml">
+        <form>
+            <sheet>
+                <group>
+                    <field name="name"/>
+                </group>
+            </sheet>
+        </form>
+    </field>
+</record>
+```
+
+**XPath rules (critical — see ERROR_163):**
+- Always verify the base view XPath exists before using it
+- Test XPath with: `//field[@name='existing_field']` — confirm field exists in base model
+- Prefer `position="after"` on known stable fields
+- Never reference fields removed in Odoo 18 (e.g. some `hr` fields changed)
+
+**View ID uniqueness:** Always prefix view/action/menu IDs with the module name:
+```xml
+id="view_freezoner_custom_sale_form"   ✓
+id="view_sale_form"                    ✗  (conflicts with other modules)
+```
+
+### Security / Access Rules
+
+Every `_name` model needs a row in `ir.model.access.csv`:
+```csv
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mymodel_user,my.model user,model_my_model,base.group_user,1,1,1,0
+```
+
+The `model_id:id` format: `model_` + `_name` with dots replaced by underscores.
+
+## Known Error Patterns (from error_fixes/)
+
+| Error | Affected Module | Symptom | Fix Direction |
+|---|---|---|---|
+| ERROR_163 XPath | `partner_custom`, `compliance_cycle` | View fails to load / XML validation error | Verify XPath targets exist in Odoo 18 base views |
+| ERROR_162 Commission SOV | `sales_commission` | User view chatter missing on SOV | Check `mail.thread` inheritance and ir.model.access |
+| ERROR_161 Corp Tax | `partner_custom` | Corporate tax field not auto-populating | Check `@api.onchange` / `@api.depends` on the field |
+| ERROR_150 Invisible | `partner_custom`, `compliance_cycle` | Fields invisible unexpectedly | Check `invisible` domain logic, Odoo 18 changed syntax |
+| ERROR_137 Backup Employee | `hr_employee_custom` | Backup employee record handling | Check `_inherit = 'hr.employee.base'` patterns |
+| ERROR_030 Tags | `project_custom` | Project tags validation error | Check M2M tag field domain/constraint |
+
+## Service Management
+
+```bash
+# Stop
+sudo systemctl stop odoo18
+
+# Start
+sudo systemctl start odoo18
+
+# Status
+sudo systemctl status odoo18
+
+# Upgrade a module (always use stop-after-init first)
+sudo -u odoo /opt/odoo/venvs/odoo18/bin/python /opt/odoo/src/odoo18/odoo-bin \
+  -c /opt/odoo/conf/odoo18.conf -u <module> --stop-after-init
+
+# Check logs
+tail -50 /opt/odoo/logs/odoo18.log
+grep "ERROR" /opt/odoo/logs/odoo18.log | tail -20
+```
+
+## Git Workflow
+
+**Never commit from `/opt/odoo/`.** Always:
+1. Edit files under `/opt/odoo/custom_addons_odoo18_freezoner/odoo-sh/`
+2. Sync changes to `/opt/Freezoner/` (the Git repository)
+3. Commit and push from `/opt/Freezoner/` on the `staging` branch
+4. Increment the version in `__manifest__.py` with each meaningful change
+
+## Available Skills
+
+Use these skills for common tasks:
+- `/diagnose-module` — find errors in any module
+- `/upgrade-module` — safely apply changes to a running module
+- `/explore-modules` — look up module dependencies and models
+- `/scaffold-freezoner-module` — create a new module following team conventions

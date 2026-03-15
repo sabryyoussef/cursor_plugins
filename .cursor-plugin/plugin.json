@@ -1,0 +1,8 @@
+{
+  "name": "freezoners",
+  "version": "0.2.0",
+  "description": "Cursor plugin for diagnosing, upgrading, and building custom Odoo 18 modules for Freezoners.",
+  "author": "Freezoners",
+  "license": "MIT",
+  "keywords": ["odoo", "odoo18", "freezone", "workflow", "modules", "erp", "diagnostics"]
+}
