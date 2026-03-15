@@ -1,6 +1,6 @@
 ---
 name: explore-modules
-description: Explore the Freezoner Odoo 18 custom module registry. Answer questions about module dependencies, model locations, which modules a developer owns, and what the full dependency chain is for any module.
+description: Explore the Freezoner Odoo 18 custom module registry. Answer questions about module dependencies, model locations, which modules a developer owns, and what the full dependency chain is for any module. Also cross-references workflow documentation.
 ---
 
 # Explore Modules
@@ -96,45 +96,49 @@ Use when you need to:
 
 #### Sabry Youssef — `_sabry_youssef/`
 
-| Module | Purpose |
-|---|---|
-| `employee_accountability` | Employee accountability tracking |
-| `error_ai_assistant` | AI-assisted error analysis |
-| `error_reporter_16` | Error reporting (migrated from v16) |
-| `error_workflow_manager` | Error workflow management |
-| `fsm_workflow_quote_v2` | FSM workflow quoting v2 |
-| `module_user_guide` | In-app user guide |
-| `openclaw_gateway` | OpenClaw AI gateway integration |
-| `pinecone_connector` | Pinecone vector DB connector |
-| `product_category_search` | Product category search enhancement |
-| `project_checkpoints_basic` | Project checkpoint tracking |
-| `project_compliance` | Project compliance checks |
-| `project_handover_notes` | Project handover documentation |
-| `project_templates_basic` | Project template management |
-| `shared_assets` | Shared CSS/JS assets across modules |
-| `smart_templates` | Smart document templates |
-| `unified_documents` | Unified document management |
+| Module | Version | Key Deps | Purpose |
+|---|---|---|---|
+| `employee_accountability` | — | `hr` | Employee accountability tracking |
+| `error_ai_assistant` | — | `mail` | AI-assisted error analysis |
+| `error_reporter_16` | — | `mail` | Error reporting (migrated from v16) |
+| `error_workflow_manager` | 18.0.1.8.0 | `error_reporter_16`, `odoo_whatsapp_integration` | **Automated error fixing workflow** with API integration, history tracking, WhatsApp notifications, AI assistance. Has views: config, attempts, fetch wizard, local wizard, git commit/push wizards, sessions |
+| `fsm_workflow_quote_v2` | — | `project`, `sale` | FSM workflow quoting v2 |
+| `module_user_guide` | — | `base` | In-app user guide system |
+| `openclaw_gateway` | — | `base`, `mail` | OpenClaw AI gateway integration (connects to OpenClaw MCP) |
+| `pinecone_connector` | — | `base` | Pinecone vector DB connector (semantic search) |
+| `product_category_search` | — | `product` | Product category search enhancement |
+| `project_checkpoints_basic` | — | `project` | Project checkpoint/milestone tracking |
+| `project_compliance` | 18.0.1.0.0 | `project`, `unified_documents`, `project_handover_notes`, `project_templates_basic`, `project_checkpoints_basic` | Compliance functionality for projects with shareholder management. Has: business_shareholder, project_compliance, partner_compliance views + return_compliance_wizard |
+| `project_handover_notes` | — | `project` | Project handover documentation |
+| `project_templates_basic` | — | `project` | Project template management |
+| `shared_assets` | — | `base` | Shared CSS/JS assets used by other modules |
+| `smart_templates` | — | `base`, `mail` | Smart document template generation |
+| `unified_documents` | — | `documents` | Unified document management across modules |
+
+> **Note on `error_workflow_manager`:** This is Sabry's most advanced module (v1.8.0). It integrates with `error_reporter_16` and WhatsApp to create automated error fixing sessions with git commit/push capabilities directly from Odoo.
 
 #### Youssef — `_youssef/`
 
-| Module | Purpose |
-|---|---|
-| `attendance_detection` | Automated attendance detection |
-| `crm_lead_heat` | CRM lead heat scoring |
-| `discipline_system` | HR discipline management |
-| `hr_attendance_location` | Attendance with GPS location |
+| Module | Key Deps | Purpose |
+|---|---|---|
+| `attendance_detection` | `hr_attendance` | Automated attendance detection |
+| `crm_lead_heat` | `crm` | CRM lead heat scoring (extends `crm_log`'s priority field) |
+| `discipline_system` | `hr` | HR discipline case management |
+| `hr_attendance_location` | `hr_attendance` | Attendance with GPS location tracking |
 
 #### Ziad — `_ziad/`
 
-| Module | Purpose |
-|---|---|
-| `client_birthday` | Client birthday tracking and notifications |
-| `client_categorisation` | Client categorization system |
-| `crm_assignation` | CRM lead assignment rules |
-| `crm_controller` | CRM controller extensions |
-| `multiproject_saleorder` | Link multiple projects to one sale order |
-| `payment_validation` | Payment validation workflow |
-| `project_by_client` | Group/filter projects by client |
+| Module | Version | Key Deps | Purpose |
+|---|---|---|---|
+| `client_birthday` | — | `res.partner` | Client birthday tracking and automated notifications |
+| `client_categorisation` | — | `res.partner` | Client categorization by industry/type |
+| `crm_assignation` | — | `crm` | CRM lead automatic assignment rules |
+| `crm_controller` | — | `crm` | CRM controller/route extensions |
+| `multiproject_saleorder` | 18.0.1.0.0 | `sale`, `project`, `analytic`, `sale_project` | Link multiple projects to one sale order. Has `data/data.xml` and views |
+| `payment_validation` | 18.0.1.0.0 | `account`, `project`, `sale` | Payment validation workflow with project/sale linking. Has config views + mail templates |
+| `project_by_client` | — | `project`, `res.partner` | Group and filter projects by client |
+
+> **Note on `_sabry_youssef/`, `_youssef/`, `_ziad/` permissions:** These directories may have restricted read permissions. Use `sudo -u odoo` when reading files in these namespaces if permission errors occur.
 
 ---
 
@@ -250,10 +254,49 @@ When asked "which module has model X?":
 | `crm.wizard` | `crm_log` |
 | `crm.call.wizard` | `crm_log` |
 
+## Workflow Cross-Reference
+
+For questions about **how a business process works** (stages, transitions, validations), use the `workflow-map` skill instead of or in addition to this skill:
+
+| Process | Skill to use |
+|---|---|
+| CRM lead stages and what's required to advance | `/workflow-map` |
+| Compliance onboarding risk scoring | `/workflow-map` |
+| Project/task lifecycle | `/workflow-map` |
+| Sale order approval flow | `/workflow-map` |
+| SOV financial computation chain | `/workflow-map` |
+| Which module owns a model | `/explore-modules` (this skill) |
+| What depends on module X | `/explore-modules` (this skill) |
+
+## Key Field Lookup
+
+When asked "where is field X defined?":
+
+| Field | Model | Module |
+|---|---|---|
+| `lead_ref` | `crm.lead` | `crm_log` |
+| `service` | `crm.lead` | `crm_log` |
+| `customer_status` | `crm.lead` | `crm_log` |
+| `business_proposal` | `crm.lead` | `crm_log` |
+| `stage_id` (partner) | `res.partner` | `partner_custom` |
+| `shareholder_ids` | `res.partner` | `partner_custom` |
+| `trade_license_*` | `res.partner` | `partner_custom` |
+| `corporate_tax` | `res.partner` | `partner_custom` |
+| `approval_request_ids` | `sale.order` | `freezoner_sale_approval` |
+| `payment_state` (task) | `project.task` | `freezoner_custom` |
+| `all_milestone_id` | `project.task` | `project_custom` |
+| `checkpoint_ids` | `project.task` | `project_custom` |
+| `compliance_state` | `crm.lead` | `compliance_cycle` |
+| `initial_risk_scoring` | `initial.client.onboarding` | `compliance_cycle` |
+| `commission_attribute` | `sale.sov` | `freezoner_custom` |
+| `joining_date` | `hr.employee.base` | `hr_employee_custom` |
+| `parent_partner_ids` | `res.partner` | `partner_organization` |
+
 ## Workflow
 
 1. Read the question and identify the module or model name
 2. Look it up in the registry above
 3. If more detail is needed (e.g. exact field names, full model code), read the source file directly
-4. For questions about enhancement plans, read `module_enhancement_plans/`
-5. For questions about past errors, read `error_fixes/ERROR_XXX_*/`
+4. For workflow/stage questions, use `/workflow-map`
+5. For questions about enhancement plans, read `module_enhancement_plans/`
+6. For questions about past errors, read `error_fixes/ERROR_XXX_*/`

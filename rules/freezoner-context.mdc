@@ -159,7 +159,8 @@ grep "ERROR" /opt/odoo/logs/odoo18.log | tail -20
 ## Available Skills
 
 Use these skills for common tasks:
-- `/diagnose-module` — find errors in any module
+- `/diagnose-module` — find errors in any module (field-level, XPath, security, API)
 - `/upgrade-module` — safely apply changes to a running module
-- `/explore-modules` — look up module dependencies and models
+- `/workflow-map` — understand CRM stages, onboarding, project/task lifecycle, sale approval flows
+- `/explore-modules` — look up module dependencies, models, and field locations
 - `/scaffold-freezoner-module` — create a new module following team conventions

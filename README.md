@@ -12,9 +12,10 @@ Invoke skills with `/` in Cursor, e.g. `/diagnose-module`.
 
 | Skill | Invoke | Description |
 |---|---|---|
-| `diagnose-module` | `/diagnose-module` | Scan any module for errors: missing security entries, XPath issues, manifest dependency gaps, deprecated API usage, and live log errors |
+| `diagnose-module` | `/diagnose-module` | Deep scan for errors: field-level validation, XPath, missing security entries, manifest dependency gaps, deprecated API usage, and live log analysis |
 | `upgrade-module` | `/upgrade-module` | Step-by-step guide to safely upgrade a module on the running Odoo 18 instance — with level-ordered dependency awareness |
-| `explore-modules` | `/explore-modules` | Look up any module by name, find reverse dependencies, locate models, and browse the full 59-module registry |
+| `workflow-map` | `/workflow-map` | Map and explain all business workflows: CRM pipeline, compliance onboarding risk, project/task lifecycle, sale approval, SOV financials. Includes stage-by-stage validations |
+| `explore-modules` | `/explore-modules` | Look up any of the 59+ modules, find reverse dependencies, locate models and fields, browse all developer namespaces |
 | `scaffold-freezoner-module` | `/scaffold-freezoner-module` | Create a new Freezoner module following team conventions: correct level folder, Odoo 18 API patterns, security, views, and migration scripts |
 | `manage-odoo-module` | `/manage-odoo-module` | General Odoo module scaffold and update helper |
 
@@ -59,4 +60,4 @@ Level 0 (Independent)  →  Level 1  →  Level 2
 
 ## Version
 
-0.2.0
+0.3.0
